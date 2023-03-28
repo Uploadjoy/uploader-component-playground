@@ -15,7 +15,7 @@ export const getPresignedUrl = async ({
   visibility,
   apiUrl,
 }: GetPresignedUrlOpts) => {
-  const response = await fetch(`${apiUrl}/presigned-url`, {
+  const response = await fetch(`${apiUrl}`, {
     method: "POST",
     body: JSON.stringify({ fileName, folder, visibility }),
   });
