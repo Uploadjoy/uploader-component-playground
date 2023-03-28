@@ -1,0 +1,6 @@
+.changeset/
+src/
+.github/
+
+tsconfig.json
+pnpm-lock.yaml
