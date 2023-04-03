@@ -4,6 +4,7 @@ specifiers:
   '@changesets/cli': ^2.26.0
   '@types/react': ^18.0.30
   '@types/react-dom': ^18.0.11
+  '@types/wicg-file-system-access': ^2020.9.5
   '@typescript-eslint/eslint-plugin': ^5.45.0
   '@typescript-eslint/parser': ^5.45.0
   eslint: ^8.28.0
@@ -22,6 +23,7 @@ devDependencies:
   '@changesets/cli': 2.26.1
   '@types/react': 18.0.30
   '@types/react-dom': 18.0.11
+  '@types/wicg-file-system-access': 2020.9.5
   '@typescript-eslint/eslint-plugin': 5.57.0_ecfbee78545374a42baa46066581fbaa
   '@typescript-eslint/parser': 5.57.0_eslint@8.36.0+typescript@4.9.5
   eslint: 8.36.0
@@ -570,6 +572,10 @@ packages:
 
   /@types/semver/7.3.13:
     resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
+    dev: true
+
+  /@types/wicg-file-system-access/2020.9.5:
+    resolution: {integrity: sha512-UYK244awtmcUYQfs7FR8710MJcefL2WvkyHMjA8yJzxd1mo0Gfn88sRZ1Bls7hiUhA2w7ne1gpJ9T5g3G0wOyA==}
     dev: true
 
   /@typescript-eslint/eslint-plugin/5.57.0_ecfbee78545374a42baa46066581fbaa:

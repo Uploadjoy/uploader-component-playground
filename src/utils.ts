@@ -33,7 +33,7 @@ export type AcceptProp = Record<
 /**
  * Custom validation function for files, returns true if the file is valid
  */
-type FileValidator = (
+export type FileValidator = (
   file: File,
 ) => { code: string; message: string } | undefined;
 
@@ -51,7 +51,7 @@ export const ErrorCodes = {
 
 type ErrorCodesType = typeof ErrorCodes;
 
-type UploaderError = {
+export type UploaderError = {
   code: ErrorCodesType[keyof ErrorCodesType];
   message: string;
 };
@@ -87,13 +87,13 @@ export const getTooManyFilesRejectionError = (maxFiles: number) => {
 };
 
 export const fileTypeIsAcceptable = (
-  acceptable: AcceptAttr,
+  acceptable: AcceptAttr | undefined,
   file: File,
   acceptAll: boolean,
 ): boolean => {
   // If acceptAll is true, all files are acceptable
   // escape hatch for obscure file types
-  if (acceptAll) {
+  if (acceptAll || !acceptable) {
     return true;
   }
 
@@ -133,23 +133,28 @@ export const fileSizeIsAcceptable = (
   return true;
 };
 
-export const fileIsAcceptable = (
+export const validateFile = (
   file: File,
-  accept: AcceptAttr,
+  accept: AcceptAttr | undefined,
   acceptAll: boolean,
   minSize: number | undefined,
   maxSize: number | undefined,
   customValidator: FileValidator | undefined,
 ) => {
+  const result: {
+    file: File;
+    errors: { code: string; message: string }[];
+  } = { file, errors: [] };
+
   if (customValidator) {
     const customValidatorError = customValidator(file);
     if (customValidatorError) {
-      return customValidatorError;
+      result.errors.push(customValidatorError);
     }
   }
 
   if (!fileTypeIsAcceptable(accept, file, acceptAll)) {
-    return getInvalidFileTypeRejectionError(accept);
+    result.errors.push(getInvalidFileTypeRejectionError(accept as any));
   }
 
   const fileSizeIsAcceptableResult = fileSizeIsAcceptable(
@@ -159,8 +164,10 @@ export const fileIsAcceptable = (
   );
 
   if (fileSizeIsAcceptableResult !== true) {
-    return fileSizeIsAcceptableResult;
+    result.errors.push(fileSizeIsAcceptableResult);
   }
+
+  return result;
 };
 
 export const allFilesAreAcceptable = (
@@ -180,15 +187,10 @@ export const allFilesAreAcceptable = (
     return false;
   }
 
-  return files.every((file) =>
-    fileIsAcceptable(
-      file,
-      accept,
-      acceptAll,
-      minSize,
-      maxSize,
-      customValidator,
-    ),
+  return files.every(
+    (file) =>
+      validateFile(file, accept, acceptAll, minSize, maxSize, customValidator)
+        .errors.length === 0,
   );
 };
 
@@ -253,7 +255,7 @@ export function canUseFileSystemAccessAPI(): boolean {
  * Convert the `{accept}` dropzone prop to the
  * `{types}` option for https://developer.mozilla.org/en-US/docs/Web/API/window/showOpenFilePicker
  */
-export function pickerOptionsFromAccept(accept: AcceptProp) {
+export function pickerOptionsFromAccept(accept: AcceptProp | null | undefined) {
   if (accept !== null && accept !== undefined) {
     const acceptForPicker = Object.entries(accept)
       .filter(([mimeType, ext]) => {
@@ -297,7 +299,7 @@ export function pickerOptionsFromAccept(accept: AcceptProp) {
  * Convert the `{accept}` dropzone prop to an array of MIME types/extensions.
  */
 export function acceptPropAsAcceptAttr(
-  accept: AcceptProp,
+  accept: AcceptProp | null | undefined,
 ): AcceptAttr | undefined {
   if (accept === null || accept === undefined) {
     return undefined;
@@ -373,3 +375,6 @@ export function isMIMEType(v: string) {
 export function isExt(v: string) {
   return /^.*\.[\w]+$/.test(v);
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export function noop() {}

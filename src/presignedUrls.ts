@@ -1,24 +1,28 @@
-type PresignedUrlFetchResponse = {
+export type PresignedUrlFetchResponse = {
   [fileName: string]: string;
 };
 
 type GetPresignedUrlOpts = {
-  fileName: string;
+  fileNames: string[];
   folder: string;
-  visibility: "public" | "private";
-  apiUrl?: string;
+  fileAccess: "public" | "private";
+  apiUrl: string;
 };
 
-export const getPresignedUrl = async ({
-  fileName,
+export const getPresignedUrls = async ({
+  fileNames,
   folder,
-  visibility,
+  fileAccess,
   apiUrl,
 }: GetPresignedUrlOpts) => {
-  const response = await fetch(`${apiUrl}`, {
-    method: "POST",
-    body: JSON.stringify({ fileName, folder, visibility }),
-  });
-  const data: PresignedUrlFetchResponse = await response.json();
-  return data[fileName];
+  try {
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      body: JSON.stringify({ fileNames, folder, fileAccess }),
+    });
+    const data: PresignedUrlFetchResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
 };
