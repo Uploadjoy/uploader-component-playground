@@ -5,10 +5,6 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js",
-    "./react": "./dist/react/index.js"
-  },
   "scripts": {
     "build": "tsup src/index.ts src/react/index.ts --format cjs,esm --dts",
     "release": "pnpm run build && changeset publish",
