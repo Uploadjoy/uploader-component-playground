@@ -1,5 +1,11 @@
 # @uploadjoy/uploader-component-playground
 
+## 0.2.1
+
+### Patch Changes
+
+- 548b780: exports
+
 ## 0.2.0
 
 ### Minor Changes
