@@ -1,0 +1,1 @@
+This is repo to play around with different ideas for an uploader component for Next.js projects.
