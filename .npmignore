@@ -1,5 +1,4 @@
 .changeset/
-src/
 .github/
 
 tsconfig.json

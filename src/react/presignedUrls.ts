@@ -3,14 +3,18 @@ export type PresignedUrlFetchResponse = {
 };
 
 type GetPresignedUrlOpts = {
-  fileNames: string[];
+  files: {
+    name: string;
+    size: number;
+    type: string;
+  }[];
   folder: string;
   fileAccess: "public" | "private";
   apiUrl: string;
 };
 
 export const getPresignedUrls = async ({
-  fileNames,
+  files,
   folder,
   fileAccess,
   apiUrl,
@@ -18,7 +22,7 @@ export const getPresignedUrls = async ({
   try {
     const response = await fetch(apiUrl, {
       method: "POST",
-      body: JSON.stringify({ fileNames, folder, fileAccess }),
+      body: JSON.stringify({ files, folder, fileAccess }),
     });
     const data: PresignedUrlFetchResponse = await response.json();
     return data;
