@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ChangeEventHandler,
   HTMLProps,
+  MouseEventHandler,
   Reducer,
   useCallback,
   useEffect,
@@ -26,9 +28,15 @@ import {
   noop,
   UploaderError,
   validateFile,
+  noopPromise,
 } from "./utils";
 import { PresignedUrlFetchResponse, getPresignedUrls } from "./presignedUrls";
-import { submit } from "./submit";
+import {
+  OnUploadError,
+  OnUploadProgress,
+  OnUploadSuccess,
+  submit,
+} from "./submit";
 
 type UseInputProps = {
   accept?: AcceptProp;
@@ -46,7 +54,10 @@ type UseInputProps = {
   onFileDialogCancel?: () => void;
   onFileDialogOpen?: () => void;
   onError?: (error: Error) => void;
-  onUploadProgress?: (event: ProgressEvent, file: File) => void;
+
+  onUploadProgress?: OnUploadProgress;
+  onUploadSuccess?: OnUploadSuccess;
+  onUploadError?: OnUploadError;
 };
 
 type UseInputPropsState = {
@@ -65,6 +76,7 @@ const initialState: UseInputPropsState = {
   isFocused: false,
   acceptedFiles: [],
   fileRejections: [],
+  presignedUrls: undefined,
 };
 
 type UseInputPropsAction = {
@@ -115,6 +127,8 @@ const useInput = ({
   fileAccess = "private",
   folder,
   onUploadProgress,
+  onUploadSuccess,
+  onUploadError,
 }: UseInputProps) => {
   const acceptAttr = useMemo(() => acceptPropAsAcceptAttr(accept), [accept]);
   const pickerTypes = useMemo(() => pickerOptionsFromAccept(accept), [accept]);
@@ -233,7 +247,7 @@ const useInput = ({
           })),
           fileAccess,
           folder: folder ?? "",
-          apiUrl: "/api/uploadjoy/presigned-urls",
+          apiUrl: "/api/uploadjoy/presignedUrls/upload",
         });
 
         dispatch({
@@ -242,6 +256,8 @@ const useInput = ({
           presignedUrls,
           type: "setFiles",
         });
+
+        return;
       }
 
       dispatch({
@@ -331,10 +347,12 @@ const useInput = ({
           multiple,
           type: "file",
           style: { display: "none" },
-          onChange: composeHandler(composeEventHandlers(onChange ?? noop)),
+          onChange: composeHandler(
+            composeEventHandlers(onChange ?? noop),
+          ) as ChangeEventHandler<HTMLInputElement>,
           onClick: composeHandler(
             composeEventHandlers(onClick ?? noop, onInputElementClick),
-          ),
+          ) as MouseEventHandler<HTMLInputElement>,
           tabIndex: -1,
           ref: inputRef,
         };
@@ -353,6 +371,8 @@ const useInput = ({
       acceptedFiles,
       presignedUrls,
       onProgress: onUploadProgress ?? noop,
+      onError: onUploadError ?? noop,
+      onSuccess: onUploadSuccess ?? noop,
     });
   }, [acceptedFiles, presignedUrls, submit]);
 
@@ -364,8 +384,8 @@ const useInput = ({
     ...state,
     isFocused: isFocused && !disabled,
     getInputProps,
-    open: composeHandler(openFileDialog),
-    uploadFiles: composeHandler(uploadFiles),
+    openFileDialog: disabled ? noop : openFileDialog,
+    uploadFiles: disabled ? noopPromise : uploadFiles,
     reset,
   };
 };

@@ -1,16 +1,10 @@
-export type PresignedUrlFetchResponse = {
-  [fileName: string]: string;
-};
+import { GetPresignedUrlOpts } from "../core/types";
 
-type GetPresignedUrlOpts = {
-  files: {
-    name: string;
-    size: number;
-    type: string;
-  }[];
-  folder: string;
-  fileAccess: "public" | "private";
-  apiUrl: string;
+export type PresignedUrlFetchResponse = {
+  [fileName: string]: {
+    url: string;
+    location: string;
+  };
 };
 
 export const getPresignedUrls = async ({
@@ -22,6 +16,9 @@ export const getPresignedUrls = async ({
   try {
     const response = await fetch(apiUrl, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ files, folder, fileAccess }),
     });
     const data: PresignedUrlFetchResponse = await response.json();
