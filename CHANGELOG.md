@@ -1,5 +1,11 @@
 # @uploadjoy/uploader-component-playground
 
+## 0.2.2
+
+### Patch Changes
+
+- 4903381: fix final
+
 ## 0.2.1
 
 ### Patch Changes
