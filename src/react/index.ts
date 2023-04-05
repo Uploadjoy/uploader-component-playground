@@ -30,7 +30,12 @@ import {
   validateFile,
   noopPromise,
 } from "./utils";
-import { PresignedUrlFetchResponse, getPresignedUrls } from "./presignedUrls";
+import { getPresignedUrls } from "./presignedUrls";
+import {
+  uploadjoyPutObjectApiOutputSchema as presignedUrlFetchResponseSchema,
+  validateFolder,
+} from "../core/validators";
+import { z } from "zod";
 import {
   OnUploadError,
   OnUploadProgress,
@@ -60,22 +65,32 @@ type UseInputProps = {
   onUploadError?: OnUploadError;
 };
 
+type FileRejectionError = {
+  type: "file-rejection-error";
+  file: File;
+  errors: (UploaderError | { code: string; message: string })[];
+};
+
+type InputError =
+  | {
+      type: "folder-name-error";
+      message: string;
+    }
+  | FileRejectionError;
+
 type UseInputPropsState = {
   isFileDialogActive: boolean;
   isFocused: boolean;
   acceptedFiles: File[];
-  fileRejections: {
-    file: File;
-    errors: (UploaderError | { code: string; message: string })[];
-  }[];
-  presignedUrls?: PresignedUrlFetchResponse;
+  errors: InputError[];
+  presignedUrls?: z.infer<typeof presignedUrlFetchResponseSchema>;
 };
 
 const initialState: UseInputPropsState = {
   isFileDialogActive: false,
   isFocused: false,
   acceptedFiles: [],
-  fileRejections: [],
+  errors: [],
   presignedUrls: undefined,
 };
 
@@ -100,7 +115,7 @@ const reducer: Reducer<UseInputPropsState, UseInputPropsAction> = (
       return {
         ...state,
         acceptedFiles: action.acceptedFiles ?? [],
-        fileRejections: action.fileRejections ?? [],
+        errors: action.errors ?? [],
         presignedUrls: action.presignedUrls ?? undefined,
       };
     case "reset":
@@ -193,11 +208,20 @@ const useInput = ({
 
   const setFiles = useCallback(
     async (files: File[]) => {
+      const errors: InputError[] = [];
       const acceptedFiles: File[] = [];
-      const fileRejections: {
-        file: File;
-        errors: (UploaderError | { code: string; message: string })[];
-      }[] = [];
+      const fileRejections: FileRejectionError[] = [];
+
+      if (folder) {
+        const folderValidationResult = validateFolder(folder);
+
+        if (!folderValidationResult.success) {
+          errors.push({
+            type: "folder-name-error",
+            message: folderValidationResult.errorMessage,
+          });
+        }
+      }
 
       files.forEach((file) => {
         const { file: maybeValidatedFile, errors } = validateFile(
@@ -213,6 +237,7 @@ const useInput = ({
           acceptedFiles.push(maybeValidatedFile);
         } else {
           fileRejections.push({
+            type: "file-rejection-error",
             file: maybeValidatedFile,
             errors,
           });
@@ -226,6 +251,7 @@ const useInput = ({
         // Reject everything and empty accepted files
         acceptedFiles.forEach((file) => {
           fileRejections.push({
+            type: "file-rejection-error",
             file,
             errors: [
               {
@@ -238,7 +264,7 @@ const useInput = ({
         acceptedFiles.splice(0);
       }
 
-      if (acceptedFiles.length > 0) {
+      if (acceptedFiles.length > 0 && errors.length === 0) {
         const presignedUrls = await getPresignedUrls({
           files: acceptedFiles.map(({ name, size, type }) => ({
             name,
@@ -252,7 +278,7 @@ const useInput = ({
 
         dispatch({
           acceptedFiles,
-          fileRejections,
+          errors,
           presignedUrls,
           type: "setFiles",
         });
@@ -262,7 +288,7 @@ const useInput = ({
 
       dispatch({
         acceptedFiles,
-        fileRejections,
+        errors,
         type: "setFiles",
       });
     },

@@ -1,11 +1,7 @@
-const API_BASE = "https://uploadjoy.com/api/v2";
+import { z } from "zod";
+import { uploadjoyPutObjectApiOutputSchema } from "../core/validators";
 
-type ApiFetchResponseBody = {
-  [fileName: string]: {
-    url: string;
-    location: string;
-  };
-};
+const API_BASE = "https://uploadjoy.com/api/v2";
 
 type ApiCallInput = {
   files: {
@@ -79,7 +75,18 @@ export const fetchPresignedUrls = async ({
 
   const data = await response.json();
 
-  // TODO verify data instead of cast
+  const responseParseResult = uploadjoyPutObjectApiOutputSchema.safeParse(data);
+  if (!responseParseResult.success) {
+    // This should never happen, but if it does, we want to know about it
+    console.error(
+      "Failed to parse response from Uploadjoy API. This is a bug.",
+    );
+    console.error(responseParseResult.error.issues);
+    throw new FetchPresignedUrlsError(
+      "Failed to fetch presigned URLs",
+      response,
+    );
+  }
 
-  return data as ApiFetchResponseBody;
+  return data as z.infer<typeof uploadjoyPutObjectApiOutputSchema>;
 };

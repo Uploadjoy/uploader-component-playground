@@ -1,4 +1,5 @@
-import { PresignedUrlFetchResponse } from "./presignedUrls";
+import { uploadjoyPutObjectApiOutputSchema as presignedUrlFetchResponseSchema } from "../core/validators";
+import { z } from "zod";
 
 export type OnUploadProgress = (event: ProgressEvent, file: File) => void;
 export type OnUploadSuccess = (file: File) => void;
@@ -54,7 +55,7 @@ export const submit = async ({
   onError,
 }: {
   acceptedFiles: File[];
-  presignedUrls: PresignedUrlFetchResponse;
+  presignedUrls: z.infer<typeof presignedUrlFetchResponseSchema>;
   onProgress: OnUploadProgress;
   onSuccess: OnUploadSuccess;
   onError: OnUploadError;
