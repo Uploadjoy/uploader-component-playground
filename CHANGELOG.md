@@ -1,5 +1,11 @@
 # @uploadjoy/uploader-component-playground
 
+## 0.2.3
+
+### Patch Changes
+
+- f81f948: Zod everywhere
+
 ## 0.2.2
 
 ### Patch Changes
